@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <title>Big Ideas Math - Login</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --canvas: #111815;
+            --panel: #202a25;
+            --panel-raised: #29352f;
+            --text: #f1f4ec;
+            --muted: #aab7ad;
+            --line: #3d4942;
+            --accent: #d7f36b;
+            --accent-ink: #182013;
+            --alert: #ff9677;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-width: 320px;
+            min-height: 100vh;
+            background-color: var(--canvas);
+            background-image: repeating-linear-gradient(135deg, transparent 0 22px, #ffffff06 22px 23px);
+            color: var(--text);
+            font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        }
+        button, select { font: inherit; }
+        .app-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: min(100%, 1560px);
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 22px clamp(16px, 3vw, 42px) 28px;
+        }
+        .app-shell:fullscreen {
+            width: 100%;
+            height: 100vh;
+            min-height: 0;
+            padding: 16px clamp(12px, 2vw, 28px);
+            background: var(--canvas);
+        }
+        .app-shell:fullscreen .game-stage,
+        .app-shell:fullscreen .empty-state,
+        .app-shell:fullscreen #gameFrame { min-height: 0; }
+        .masthead {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .brand { display: flex; align-items: center; gap: 13px; }
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background: var(--accent);
+            color: var(--accent-ink);
+            font-size: 15px;
+            font-weight: 900;
+        }
+        h1 { margin: 0; font-size: 21px; font-weight: 700; }
+        .eyebrow {
+            margin: 0 0 4px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .library-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .control-bar {
+            display: grid;
+            grid-template-columns: minmax(200px, 1fr) auto auto auto;
+            align-items: end;
+            gap: 10px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            background: var(--panel);
+        }
+        .select-wrap { display: grid; gap: 6px; min-width: 0; }
+        .select-wrap label {
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        select, button {
+            min-height: 44px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            padding: 0 14px;
+        }
+        select {
+            width: 100%;
+            background: var(--panel-raised);
+            color: var(--text);
+        }
+        button {
+            background: var(--panel-raised);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        button:hover:not(:disabled) { border-color: var(--accent); }
+        button:focus-visible, select:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+        button:disabled { cursor: not-allowed; opacity: .48; }
+        #openButton {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: var(--accent-ink);
+        }
+        #status {
+            min-height: 17px;
+            margin: -10px 2px -8px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+        #status.error { color: var(--alert); }
+        .game-stage {
+            position: relative;
+            display: grid;
+            flex: 1;
+            min-height: 64vh;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            background: #080c0a;
+        }
+        .empty-state {
+            display: grid;
+            place-content: center;
+            gap: 8px;
+            min-height: 64vh;
+            padding: 24px;
+            text-align: center;
+        }
+        .empty-state strong { font-size: 20px; }
+        .empty-state span { color: var(--muted); font-size: 14px; }
+        #gameFrame {
+            display: none;
+            width: 100%;
+            height: 100%;
+            min-height: 64vh;
+            border: 0;
+            background: #000;
+        }
+        .game-stage[data-active="true"] .empty-state { display: none; }
+        .game-stage[data-active="true"] #gameFrame { display: block; }
+        @media (max-width: 700px) {
+            .app-shell { gap: 13px; padding-top: 16px; }
+            .control-bar { grid-template-columns: 1fr 1fr; }
+            .select-wrap { grid-column: 1 / -1; }
+            .control-bar button { width: 100%; padding: 0 8px; }
+            .library-label { font-size: 10px; }
+            .game-stage, .empty-state, #gameFrame { min-height: 58vh; }
+        }
+    </style>
+</head>
+<body>
+    <main class="app-shell" id="appShell">
+        <header class="masthead">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">BM</span>
+                <div>
+                    <p class="eyebrow">Game library</p>
+                    <h1>Big Ideas Math</h1>
+                </div>
+            </div>
+            <span class="library-label">17 titles</span>
+        </header>
+
+        <section class="control-bar" aria-label="Game controls">
+            <div class="select-wrap">
+                <label for="gameSelect">Choose a game</label>
+                <select id="gameSelect">
+                    <option value="">-- choose a game --</option>
+                </select>
+            </div>
+            <button id="openButton" type="button" disabled>Play</button>
+            <button id="fullscreenButton" type="button" title="Enter fullscreen" disabled>Fullscreen</button>
+            <button id="exitButton" type="button" title="Exit the current game" disabled>Exit game</button>
+        </section>
+        <div id="status" role="status" aria-live="polite"></div>
+
+        <section class="game-stage" id="gameStage" data-active="false" aria-label="Game">
+            <div class="empty-state">
+                <strong>Choose a game to begin</strong>
+                <span>Your selected game will open here.</span>
+            </div>
+            <iframe id="gameFrame" title="Game player" src="about:blank" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>
+        </section>
+    </main>
+
+    <script>
+        const FILES = [
+            "Mantle.html",
+            "chess.html",
+            "cookie-clicker.htm",
+            "krillion.html",
+            "melon-playground.html",
+            "moto-x3m-pool-party.html",
+            "plants-vs-zombies.html",
+            "retro-bowl.html",
+            "riddle-school.html",
+            "riddle-school-2.html",
+            "riddle-school-3.html",
+            "riddle-school-4.html",
+            "riddle-school-5.html",
+            "superhot.html",
+            "the-impossible-quiz.html",
+            "the-impossible-quiz-2.html",
+            "tomb-of-the-mask.htm"
+        ];
+
+        const appShell = document.getElementById("appShell");
+        const gameStage = document.getElementById("gameStage");
+        const gameFrame = document.getElementById("gameFrame");
+        const gameSelect = document.getElementById("gameSelect");
+        const openButton = document.getElementById("openButton");
+        const fullscreenButton = document.getElementById("fullscreenButton");
+        const exitButton = document.getElementById("exitButton");
+        const status = document.getElementById("status");
+
+        function setStatus(message, isError = false) {
+            status.textContent = message;
+            status.classList.toggle("error", isError);
+        }
+
+        function updateFullscreenButton() {
+            const isFullscreen = document.fullscreenElement === appShell;
+            fullscreenButton.textContent = isFullscreen ? "Exit fullscreen" : "Fullscreen";
+            fullscreenButton.title = isFullscreen ? "Exit fullscreen" : "Enter fullscreen";
+        }
+
+        function loadGame() {
+            const path = gameSelect.value;
+            if (!path) {
+                setStatus("Choose a game first.", true);
+                return;
+            }
+
+            gameFrame.src = path;
+            gameFrame.title = "Playing " + gameSelect.options[gameSelect.selectedIndex].text;
+            gameStage.dataset.active = "true";
+            fullscreenButton.disabled = false;
+            exitButton.disabled = false;
+            setStatus("Playing " + gameSelect.options[gameSelect.selectedIndex].text + ".");
+        }
+
+        function exitGame() {
+            gameFrame.src = "about:blank";
+            gameFrame.title = "Game player";
+            gameStage.dataset.active = "false";
+            gameSelect.value = "";
+            fullscreenButton.disabled = true;
+            exitButton.disabled = true;
+            setStatus("");
+            if (document.fullscreenElement) document.exitFullscreen();
+        }
+
+        for (const path of FILES) {
+            gameSelect.appendChild(new Option(path, path));
+        }
+
+        gameSelect.addEventListener("change", () => {
+            openButton.disabled = !gameSelect.value;
+        });
+        openButton.addEventListener("click", loadGame);
+        exitButton.addEventListener("click", exitGame);
+        fullscreenButton.addEventListener("click", () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                appShell.requestFullscreen().catch(() => {
+                    setStatus("Fullscreen is unavailable in this browser.", true);
+                });
+            }
+        });
+        document.addEventListener("fullscreenchange", updateFullscreenButton);
+    </script>
+</body>
+</html>
