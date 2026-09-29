@@ -137,49 +137,20 @@
             return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
         }
 
-        async function loadAvailableFiles() {
-            const available = [];
-
-            for (const path of FILES) {
-                try {
-                    const response = await fetch(path, {
-                        cache: "no-store",
-                        credentials: "same-origin"
-                    });
-
-                    if (!response.ok) continue;
-
-                    const html = await response.text();
-                    if (html.trim() && /<html[\s>]/i.test(html)) {
-                        available.push(path);
-                    }
-                } catch (_) {
-                    // Ignore missing/unreadable entries.
-                }
-            }
-
+        function loadAvailableFiles() {
             select.replaceChildren(
-                new Option(
-                    available.length ? "-- choose a file --" : "No playable files found",
-                    ""
-                )
+                new Option("-- choose a file --", "")
             );
 
-            for (const path of available) {
+            for (const path of FILES) {
                 select.appendChild(
                     new Option(path.split("/").pop(), path)
                 );
             }
 
-            select.disabled = available.length === 0;
-            openButton.disabled = available.length === 0;
-
-            if (available.length) {
-                setStatus(available.length + " playable file" +
-                    (available.length === 1 ? "" : "s") + " available.");
-            } else {
-                setStatus("No valid HTML files are currently available.", true);
-            }
+            select.disabled = false;
+            openButton.disabled = false;
+            setStatus(FILES.length + " file" + (FILES.length === 1 ? "" : "s") + " available.");
         }
 
         openButton.addEventListener("click", async () => {
