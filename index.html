@@ -55,6 +55,11 @@
         const FILES = [
             "Mantle.html",
             "chess.html",
+            "melon-playground.html",
+            "krillion.html",
+            "plants-vs-zombies.html",
+            "moto-x3m-pool-party.html",
+            "cookie-clicker.htm",
             "game2.html",
             "folder/game3.html"
         ];
@@ -65,11 +70,15 @@
         const viewer = document.getElementById("viewer");
         const viewerFrame = document.getElementById("viewerFrame");
 
-        const blobURLs = new Set();
-
         function setStatus(message, isError = false) {
             status.textContent = message;
             status.classList.toggle("error", isError);
+        }
+
+        function writeHTML(targetDocument, html) {
+            targetDocument.open();
+            targetDocument.write(html);
+            targetDocument.close();
         }
 
         function getTitle(html, fallback) {
@@ -172,6 +181,9 @@
                 return;
             }
 
+            const popup = window.open("about:blank", "_blank");
+            if (popup) popup.opener = null;
+
             openButton.disabled = true;
             setStatus("Loading " + path + "...");
 
@@ -195,44 +207,32 @@
                     path.split("/").pop()
                 );
 
-                // The opened page remains a Blob URL, but its HTML is prepared
-                // so relative CSS/JS/images and the favicon still work.
-                const blobHTML = prepareHTML(sourceHTML, path);
-                const blob = new Blob([blobHTML], { type: "text/html;charset=utf-8" });
-                const blobURL = URL.createObjectURL(blob);
-                blobURLs.add(blobURL);
+                const preparedHTML = prepareHTML(sourceHTML, path);
 
-                const win = window.open(blobURL, "_blank", "noopener");
-
-                // Always provide the about:blank iframe view too.
                 viewer.style.display = "block";
                 viewerFrame.title = pageTitle;
 
                 const iframeDoc =
                     viewerFrame.contentDocument ||
                     viewerFrame.contentWindow.document;
+                writeHTML(iframeDoc, preparedHTML);
 
-                iframeDoc.open();
-                iframeDoc.write(blobHTML);
-                iframeDoc.close();
+                if (popup && !popup.closed) {
+                    writeHTML(popup.document, preparedHTML);
+                }
 
-                if (!win) {
+                if (!popup || popup.closed) {
                     setStatus("Popup was blocked; the page is open in the embedded viewer.");
                 } else {
-                    setStatus("Opened " + pageTitle + " in a Blob tab and the embedded viewer.");
+                    setStatus("Opened " + pageTitle + " in a new tab and the embedded viewer.");
                 }
 
                 viewer.scrollIntoView({ behavior: "smooth", block: "start" });
             } catch (error) {
+                if (popup && !popup.closed) popup.close();
                 setStatus(error.message || "Unable to open the selected file.", true);
             } finally {
                 openButton.disabled = false;
-            }
-        });
-
-        window.addEventListener("beforeunload", () => {
-            for (const url of blobURLs) {
-                URL.revokeObjectURL(url);
             }
         });
 
