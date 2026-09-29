@@ -175,34 +175,34 @@
     <main class="app-shell" id="appShell">
         <header class="masthead">
             <div class="brand">
-                <span class="brand-mark" aria-hidden="true">BM</span>
+                <span class="brand-mark" aria-hidden="true">CS</span>
                 <div>
-                    <p class="eyebrow">Game library</p>
-                    <h1>Big Ideas Math</h1>
+                    <p class="eyebrow">Grade library</p>
+                    <h1>Campus Student</h1>
                 </div>
             </div>
             <span class="library-label">17 titles</span>
         </header>
 
-        <section class="control-bar" aria-label="Game controls">
+        <section class="control-bar" aria-label="Grade controls">
             <div class="select-wrap">
-                <label for="gameSelect">Choose a game</label>
+                <label for="gameSelect">Choose a grade</label>
                 <select id="gameSelect">
-                    <option value="">-- choose a game --</option>
+                    <option value="">-- choose a grade --</option>
                 </select>
             </div>
             <button id="openButton" type="button" disabled>Play</button>
             <button id="fullscreenButton" type="button" title="Enter fullscreen" disabled>Fullscreen</button>
-            <button id="exitButton" type="button" title="Exit the current game" disabled>Exit game</button>
+            <button id="exitButton" type="button" title="Exit the current grade" disabled>Exit grade</button>
         </section>
         <div id="status" role="status" aria-live="polite"></div>
 
-        <section class="game-stage" id="gameStage" data-active="false" aria-label="Game">
+        <section class="game-stage" id="gameStage" data-active="false" aria-label="Grade">
             <div class="empty-state">
-                <strong>Choose a game to begin</strong>
-                <span>Your selected game will open here.</span>
+                <strong>Choose a grade to begin</strong>
+                <span>Your selected grade will open here.</span>
             </div>
-            <iframe id="gameFrame" title="Game player" src="about:blank" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>
+            <iframe id="gameFrame" title="Grade content" src="about:blank" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>
         </section>
     </main>
 
@@ -249,7 +249,7 @@
         function loadGame() {
             const path = gameSelect.value;
             if (!path) {
-                setStatus("Choose a game first.", true);
+                setStatus("Choose a grade first.", true);
                 return;
             }
 
@@ -258,12 +258,12 @@
             gameStage.dataset.active = "true";
             fullscreenButton.disabled = false;
             exitButton.disabled = false;
-            setStatus("Playing " + gameSelect.options[gameSelect.selectedIndex].text + ".");
+            setStatus("Opening " + gameSelect.options[gameSelect.selectedIndex].text + ".");
         }
 
         function exitGame() {
             gameFrame.src = "about:blank";
-            gameFrame.title = "Game player";
+            gameFrame.title = "Grade content";
             gameStage.dataset.active = "false";
             gameSelect.value = "";
             fullscreenButton.disabled = true;
