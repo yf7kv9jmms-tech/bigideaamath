@@ -318,7 +318,7 @@
         }
 
         function normalize(answer) {
-            return answer.trim().toLocaleLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, " ");
+            return answer.trim().toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, " ");
         }
 
         function startDive() {
