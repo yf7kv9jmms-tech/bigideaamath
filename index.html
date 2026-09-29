@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Untitled Document</title>
+</head>
+<body>
+    <p onclick="window.location.href='desktop.html';">A new update is available and can only be accessed by uploading the latest version manually. If you do not have access to the latest update, you may click anywhere on this text to redirect yourself to the old desktop. You may also use this webpage to open HTML ports of games.</p>
+    <input type="file" id="fileInput" accept=".html">
+    <button id="openButton">Open</button>
+
+    <script>
+        document.getElementById('openButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const blob = new Blob([file], { type: 'text/html' });
+                const blobURL = URL.createObjectURL(blob);
+                window.open(blobURL, '_blank');
+            } else {
+                alert('Please select an HTML file first.');
+            }
+        });
+    </script>
+</body>
+</html>
