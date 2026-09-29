@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#071c2a">
+    <title>Krillion | Offline Solo Dive</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="game-data.js" defer></script>
+    <script src="game.js" defer></script>
+</head>
+<body>
+    <div class="ocean" aria-hidden="true"></div>
+    <div class="shell">
+        <header class="topbar">
+            <div class="wordmark">
+                <span class="mark" aria-hidden="true">K</span>
+                <div>
+                    <p class="brand-name">KRILLION</p>
+                    <p class="brand-note">Offline solo dive</p>
+                </div>
+            </div>
+            <p class="top-meta"><strong>SOLO DIVE</strong>Seven prompts. One shot each.</p>
+        </header>
+
+        <main>
+            <section class="dive-panel intro" id="divePanel" aria-live="polite">
+                <div class="panel-content" id="introState">
+                    <p class="eyebrow">Descend beyond the obvious</p>
+                    <h1>Think deeper.<br>Answer rarer.</h1>
+                    <p class="subline">Give one correct answer that most people would miss. Rarer answers carry you deeper.</p>
+                    <div class="intro-stats" aria-label="Game details">
+                        <div><strong>07</strong><span>rounds</span></div>
+                        <div><strong>25s</strong><span>per answer</span></div>
+                        <div><strong>700</strong><span>max points</span></div>
+                    </div>
+                    <button class="primary" id="startButton" type="button">Start your dive <span aria-hidden="true">→</span></button>
+                </div>
+
+                <div class="panel-content hidden" id="playState">
+                    <div class="round-line"><p class="eyebrow">Dive prompt</p><span class="round-count" id="roundCount">01 / 07</span></div>
+                    <div class="progress" id="progress" aria-hidden="true"></div>
+                    <div class="prompt-area">
+                        <p class="eyebrow" id="promptCategory">Open prompt</p>
+                        <h1 id="promptText"></h1>
+                        <p class="subline">Type one answer. The less obvious the correct answer, the more you score.</p>
+                    </div>
+                    <form class="answer-form" id="answerForm">
+                        <label class="visually-hidden" for="answerInput">Your answer</label>
+                        <input id="answerInput" type="text" maxlength="50" autocomplete="off" placeholder="Your answer" required>
+                        <button class="primary" id="submitButton" type="submit">Lock answer</button>
+                    </form>
+                </div>
+
+                <div class="panel-content hidden" id="endState">
+                    <p class="eyebrow">Dive complete</p>
+                    <h1 id="endTitle">You made the descent.</h1>
+                    <div class="final-score" id="finalScore">0<span>points scored</span></div>
+                    <ul class="summary-list" id="summaryList"></ul>
+                    <button class="primary" id="replayButton" type="button">Dive again <span aria-hidden="true">↻</span></button>
+                </div>
+
+                <div class="bottom-line panel-content hidden" id="statusRow">
+                    <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+                    <div class="timer-wrap"><span class="timer-label">Time left</span><span class="timer" id="timer">25</span></div>
+                </div>
+            </section>
+
+            <aside class="side-panel" aria-label="Dive stats">
+                <section class="depth-card" aria-label="Current depth">
+                    <p class="depth-title">Depth reached</p>
+                    <strong class="depth-number" id="depthNumber">0</strong>
+                    <span class="depth-unit">metres</span>
+                    <div class="depth-track" aria-hidden="true"><span class="depth-marker" id="depthMarker"></span></div>
+                    <div class="depth-labels" aria-hidden="true"><span>0 m</span><span>2,000 m</span><span>4,000 m</span><span>7,000 m</span></div>
+                </section>
+                <section class="log-card">
+                    <h2 class="log-title">Dive log <span id="scoreLabel">· 0 pts</span></h2>
+                    <ul class="log-list" id="logList"><li class="log-empty">Your answers will surface here.</li></ul>
+                </section>
+            </aside>
+        </main>
+        <footer class="credit">Independent offline solo edition. Original Krillion game and concept by Playdaily.</footer>
+    </div>
+</body>
+</html>
