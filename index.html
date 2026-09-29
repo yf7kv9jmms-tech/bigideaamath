@@ -1,66 +1,57 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-
-    <!-- Main website favicon -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-
     <title>Big Ideas Math - Login</title>
-
     <style>
+        :root { color-scheme: light dark; }
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 760px;
             margin: 60px auto;
+            padding: 0 20px;
             text-align: center;
         }
-
         select, button {
             padding: 10px 14px;
             font-size: 16px;
             margin: 5px;
         }
-
+        button:disabled, select:disabled { opacity: .55; cursor: not-allowed; }
+        #status { min-height: 1.4em; margin: 12px 0; }
         #viewer {
             margin-top: 20px;
             width: 100%;
             height: 70vh;
             display: none;
         }
-
         #viewerFrame {
             width: 100%;
             height: 100%;
             border: 1px solid #ccc;
             border-radius: 6px;
+            background: #fff;
         }
+        .error { color: #b00020; }
     </style>
 </head>
-
 <body>
-
     <h2>Select a file to open</h2>
 
-    <select id="fileSelect">
-        <option value="">-- choose a file --</option>
+    <select id="fileSelect" disabled>
+        <option value="">Checking available files...</option>
     </select>
 
-    <button id="openButton">Open</button>
+    <button id="openButton" disabled>Open</button>
+    <div id="status" role="status" aria-live="polite"></div>
 
     <div id="viewer">
-        <iframe
-            id="viewerFrame"
-            title="viewer"
-            src="about:blank">
-        </iframe>
+        <iframe id="viewerFrame" title="Selected page" src="about:blank"></iframe>
     </div>
 
     <script>
-        // ============================================
-        // MANIFEST
-        // ============================================
         const FILES = [
             "Mantle.html",
             "chess.html",
@@ -69,255 +60,183 @@
         ];
 
         const select = document.getElementById("fileSelect");
+        const openButton = document.getElementById("openButton");
+        const status = document.getElementById("status");
         const viewer = document.getElementById("viewer");
         const viewerFrame = document.getElementById("viewerFrame");
 
-        // Keep track of created Blob URLs so they can be cleaned up.
-        const blobURLs = [];
+        const blobURLs = new Set();
 
-        // ============================================
-        // POPULATE DROPDOWN
-        // ============================================
-        FILES.forEach(path => {
-            const name = path.split("/").pop();
-
-            const opt = document.createElement("option");
-            opt.value = path;
-            opt.textContent = name;
-
-            select.appendChild(opt);
-        });
-
-        // ============================================
-        // GET TITLE FROM HTML
-        // ============================================
-        function getTitle(html, fallback) {
-            try {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, "text/html");
-
-                const title = doc.querySelector("title");
-
-                if (title && title.textContent.trim()) {
-                    return title.textContent.trim();
-                }
-            } catch (error) {
-                console.warn("Could not read title:", error);
-            }
-
-            return fallback;
+        function setStatus(message, isError = false) {
+            status.textContent = message;
+            status.classList.toggle("error", isError);
         }
 
-        // ============================================
-        // PREPARE HTML FOR ABOUT:BLANK IFRAME
-        // ============================================
-        function prepareIframeHTML(html, originalPath) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
+        function getTitle(html, fallback) {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+            const title = doc.querySelector("title");
+            return title && title.textContent.trim()
+                ? title.textContent.trim()
+                : fallback;
+        }
 
-            // --------------------------------------------
-            // Ensure <head> exists
-            // --------------------------------------------
+        function prepareHTML(html, originalPath) {
+            const doc = new DOMParser().parseFromString(html, "text/html");
+
             if (!doc.head) {
                 const head = doc.createElement("head");
-                doc.documentElement.insertBefore(
-                    head,
-                    doc.body || null
-                );
+                doc.documentElement.insertBefore(head, doc.body || null);
             }
 
-            // --------------------------------------------
-            // Preserve the original title
-            // --------------------------------------------
             let title = doc.querySelector("title");
-
             if (!title) {
                 title = doc.createElement("title");
+                title.textContent = originalPath.split("/").pop();
                 doc.head.appendChild(title);
             }
 
-            // --------------------------------------------
-            // Add the same favicon
-            // --------------------------------------------
-            // Remove existing favicon declarations so the
-            // opened page consistently uses our favicon.
-            doc.querySelectorAll(
-                'link[rel~="icon"], link[rel="shortcut icon"]'
-            ).forEach(link => link.remove());
+            // Preserve the source page's relative resources when the document
+            // is opened from a Blob URL or written into about:blank.
+            const base = doc.createElement("base");
+            base.href = new URL(
+                originalPath.substring(0, originalPath.lastIndexOf("/") + 1) || "./",
+                window.location.href
+            ).href;
+            const existingBase = doc.querySelector("base");
+            if (existingBase) existingBase.remove();
+            doc.head.insertBefore(base, doc.head.firstChild);
+
+            // Use the repo's real favicon. This resolves correctly on GitHub
+            // Pages even when the selected file lives in a subdirectory.
+            doc.querySelectorAll('link[rel~="icon"], link[rel="shortcut icon"]')
+                .forEach(link => link.remove());
 
             const favicon = doc.createElement("link");
             favicon.rel = "icon";
             favicon.type = "image/x-icon";
-
-            // favicon.ico is located beside this launcher.
-            favicon.href = new URL(
-                "favicon.ico",
-                window.location.href
-            ).href;
-
+            favicon.href = new URL("favicon.ico", window.location.href).href;
             doc.head.appendChild(favicon);
-
-            // --------------------------------------------
-            // Make relative resources work
-            // --------------------------------------------
-            // Since the iframe itself is about:blank,
-            // relative paths would otherwise resolve against
-            // about:blank.
-            //
-            // The original HTML file's directory becomes
-            // the base for its CSS, JS, images, etc.
-            const directory = originalPath.substring(
-                0,
-                originalPath.lastIndexOf("/") + 1
-            );
-
-            const base = doc.createElement("base");
-
-            base.href = new URL(
-                directory || "./",
-                window.location.href
-            ).href;
-
-            doc.head.insertBefore(
-                base,
-                doc.head.firstChild
-            );
 
             return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
         }
 
-        // ============================================
-        // OPEN FILE
-        // ============================================
-        document
-            .getElementById("openButton")
-            .addEventListener("click", async () => {
+        async function loadAvailableFiles() {
+            const available = [];
 
-                const path = select.value;
-
-                if (!path) {
-                    alert("Please choose a file first.");
-                    return;
-                }
-
+            for (const path of FILES) {
                 try {
-                    // ----------------------------------------
-                    // Fetch the original HTML file
-                    // ----------------------------------------
                     const response = await fetch(path, {
-                        cache: "no-cache"
+                        cache: "no-store",
+                        credentials: "same-origin"
                     });
 
-                    if (!response.ok) {
-                        throw new Error(
-                            "Could not load " + path
-                        );
-                    }
+                    if (!response.ok) continue;
 
                     const html = await response.text();
-
-                    // ----------------------------------------
-                    // Determine its original title
-                    // ----------------------------------------
-                    const fallbackTitle =
-                        path.split("/").pop();
-
-                    const pageTitle = getTitle(
-                        html,
-                        fallbackTitle
-                    );
-
-                    // ----------------------------------------
-                    // Prepare the iframe version
-                    // ----------------------------------------
-                    const iframeHTML =
-                        prepareIframeHTML(
-                            html,
-                            path
-                        );
-
-                    // ----------------------------------------
-                    // Create a Blob for the actual website
-                    // ----------------------------------------
-                    const blob = new Blob(
-                        [html],
-                        {
-                            type: "text/html"
-                        }
-                    );
-
-                    const blobURL =
-                        URL.createObjectURL(blob);
-
-                    blobURLs.push(blobURL);
-
-                    // ----------------------------------------
-                    // Keep the actual opened website as Blob
-                    // ----------------------------------------
-                    const win = window.open(
-                        blobURL,
-                        "_blank"
-                    );
-
-                    // ----------------------------------------
-                    // Also open/render the same website
-                    // inside an about:blank iframe.
-                    // ----------------------------------------
-                    viewer.style.display = "block";
-
-                    // Explicitly keep iframe at about:blank.
-                    viewerFrame.src = "about:blank";
-
-                    viewerFrame.onload = () => {
-                        try {
-                            const iframeDoc =
-                                viewerFrame.contentDocument ||
-                                viewerFrame.contentWindow.document;
-
-                            iframeDoc.open();
-                            iframeDoc.write(iframeHTML);
-                            iframeDoc.close();
-
-                            // Keep the iframe document title
-                            // synchronized with the source page.
-                            viewerFrame.title = pageTitle;
-
-                        } catch (error) {
-                            console.error(
-                                "Could not write iframe:",
-                                error
-                            );
-                        }
-                    };
-
-                    // Force the iframe's about:blank load
-                    // handler to fire.
-                    viewerFrame.src = "about:blank";
-
-                    // ----------------------------------------
-                    // Scroll the viewer into view
-                    // ----------------------------------------
-                    viewer.scrollIntoView({
-                        behavior: "smooth"
-                    });
-
-                } catch (err) {
-                    alert(
-                        "Error: " + err.message
-                    );
+                    if (html.trim() && /<html[\s>]/i.test(html)) {
+                        available.push(path);
+                    }
+                } catch (_) {
+                    // Ignore missing/unreadable entries.
                 }
-            });
+            }
 
-        // ============================================
-        // CLEAN UP BLOB URLS WHEN PAGE CLOSES
-        // ============================================
-        window.addEventListener("beforeunload", () => {
-            blobURLs.forEach(url => {
-                URL.revokeObjectURL(url);
-            });
+            select.replaceChildren(
+                new Option(
+                    available.length ? "-- choose a file --" : "No playable files found",
+                    ""
+                )
+            );
+
+            for (const path of available) {
+                select.appendChild(
+                    new Option(path.split("/").pop(), path)
+                );
+            }
+
+            select.disabled = available.length === 0;
+            openButton.disabled = available.length === 0;
+
+            if (available.length) {
+                setStatus(available.length + " playable file" +
+                    (available.length === 1 ? "" : "s") + " available.");
+            } else {
+                setStatus("No valid HTML files are currently available.", true);
+            }
+        }
+
+        openButton.addEventListener("click", async () => {
+            const path = select.value;
+            if (!path) {
+                setStatus("Please choose a file first.", true);
+                return;
+            }
+
+            openButton.disabled = true;
+            setStatus("Loading " + path + "...");
+
+            try {
+                const response = await fetch(path, {
+                    cache: "no-store",
+                    credentials: "same-origin"
+                });
+
+                if (!response.ok) {
+                    throw new Error("Could not load " + path + " (HTTP " + response.status + ").");
+                }
+
+                const sourceHTML = await response.text();
+                if (!sourceHTML.trim() || !/<html[\s>]/i.test(sourceHTML)) {
+                    throw new Error(path + " is empty or is not a complete HTML document.");
+                }
+
+                const pageTitle = getTitle(
+                    sourceHTML,
+                    path.split("/").pop()
+                );
+
+                // The opened page remains a Blob URL, but its HTML is prepared
+                // so relative CSS/JS/images and the favicon still work.
+                const blobHTML = prepareHTML(sourceHTML, path);
+                const blob = new Blob([blobHTML], { type: "text/html;charset=utf-8" });
+                const blobURL = URL.createObjectURL(blob);
+                blobURLs.add(blobURL);
+
+                const win = window.open(blobURL, "_blank", "noopener");
+
+                // Always provide the about:blank iframe view too.
+                viewer.style.display = "block";
+                viewerFrame.title = pageTitle;
+
+                const iframeDoc =
+                    viewerFrame.contentDocument ||
+                    viewerFrame.contentWindow.document;
+
+                iframeDoc.open();
+                iframeDoc.write(blobHTML);
+                iframeDoc.close();
+
+                if (!win) {
+                    setStatus("Popup was blocked; the page is open in the embedded viewer.");
+                } else {
+                    setStatus("Opened " + pageTitle + " in a Blob tab and the embedded viewer.");
+                }
+
+                viewer.scrollIntoView({ behavior: "smooth", block: "start" });
+            } catch (error) {
+                setStatus(error.message || "Unable to open the selected file.", true);
+            } finally {
+                openButton.disabled = false;
+            }
         });
-    </script>
 
+        window.addEventListener("beforeunload", () => {
+            for (const url of blobURLs) {
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        loadAvailableFiles();
+    </script>
 </body>
 </html>
-```
