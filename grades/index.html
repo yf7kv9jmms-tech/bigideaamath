@@ -240,6 +240,11 @@
             status.classList.toggle("error", isError);
         }
 
+        function requestPersistentStorage() {
+            if (!navigator.storage?.persist) return Promise.resolve(false);
+            return navigator.storage.persist().catch(() => false);
+        }
+
         function updateFullscreenButton() {
             const isFullscreen = document.fullscreenElement === gameStage;
             fullscreenButton.textContent = isFullscreen ? "Exit fullscreen" : "Fullscreen";
@@ -253,12 +258,20 @@
                 return;
             }
 
+            const title = gameSelect.options[gameSelect.selectedIndex].text;
+            const storageRequest = requestPersistentStorage();
             gameFrame.src = path;
-            gameFrame.title = "Playing " + gameSelect.options[gameSelect.selectedIndex].text;
+            gameFrame.title = "Playing " + title;
             gameStage.dataset.active = "true";
             fullscreenButton.disabled = false;
             exitButton.disabled = false;
-            setStatus("Opening " + gameSelect.options[gameSelect.selectedIndex].text + ".");
+            setStatus("Opening " + title + ".");
+            storageRequest.then(isPersistent => {
+                if (gameSelect.value !== path) return;
+                setStatus(isPersistent
+                    ? title + " opened. Browser storage is marked persistent."
+                    : title + " opened. Save support depends on the game and browser storage policy.");
+            });
         }
 
         function exitGame() {
