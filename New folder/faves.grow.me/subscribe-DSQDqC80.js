@@ -1,1 +1,0 @@
-import{Ns as e}from"./app.f69b217.js";import{n as t,r as n}from"./Subscribe-Bpew0-ff.js";var r;e((()=>{n(),r=t}))();export{r as default};

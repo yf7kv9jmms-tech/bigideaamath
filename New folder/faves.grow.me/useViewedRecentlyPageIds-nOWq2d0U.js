@@ -1,1 +1,0 @@
-import{Ns as e,Ps as t,vt as n,yo as r,yt as i}from"./app.f69b217.js";function a(){let e=i(),[t]=(0,o.useState)(()=>{let t=e.getItem(`grow-faves:recentlyViewedPageIds`);try{if(t){let e=JSON.parse(t);if(Array.isArray(e))return e}}catch(t){e.removeItem(`grow-faves:recentlyViewedPageIds`)}return[]});return t}var o,s=e((()=>{o=t(r()),n()}));export{a as n,s as t};
