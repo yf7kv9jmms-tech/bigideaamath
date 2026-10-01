@@ -32,19 +32,52 @@
             font: inherit;
             font-weight: 700;
         }
-        button:focus-visible { outline: 2px solid #f1f4ec; outline-offset: 3px; }
+        input {
+            min-height: 48px;
+            padding: 0 14px;
+            border: 1px solid #536158;
+            border-radius: 4px;
+            background: #202a25;
+            color: #f1f4ec;
+            font: inherit;
+        }
+        button:focus-visible, input:focus-visible { outline: 2px solid #f1f4ec; outline-offset: 3px; }
+        form { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+        [hidden] { display: none !important; }
         #status { min-height: 1.3em; color: #ff9677; font-size: 14px; }
     </style>
 </head>
 <body>
     <main>
         <h1>Campus Student</h1>
-        <button id="launchButton" type="button">Open grade library</button>
+        <form id="accessForm">
+            <label for="passwordInput" class="visually-hidden">Password</label>
+            <input id="passwordInput" type="password" placeholder="Password" autocomplete="current-password" required>
+            <button type="submit">Unlock</button>
+        </form>
+        <button id="launchButton" type="button" hidden disabled>Open grade library</button>
         <div id="status" role="status" aria-live="polite"></div>
     </main>
     <script>
+        const accessForm = document.getElementById("accessForm");
+        const passwordInput = document.getElementById("passwordInput");
         const launchButton = document.getElementById("launchButton");
         const status = document.getElementById("status");
+
+        accessForm.addEventListener("submit", event => {
+            event.preventDefault();
+            if (passwordInput.value !== "1246+372") {
+                status.textContent = "Incorrect password.";
+                passwordInput.select();
+                return;
+            }
+
+            accessForm.hidden = true;
+            launchButton.hidden = false;
+            launchButton.disabled = false;
+            status.textContent = "Access granted.";
+            launchButton.focus();
+        });
 
         launchButton.addEventListener("click", () => {
             const popup = window.open("about:blank", "_blank");
